@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 
-training_data = datasets.FashionMNIST(
+training_data = datasets.MNIST(
     root = 'Data',
     train = True,
     download=True,
@@ -42,7 +42,6 @@ class Net(nn.Module):
         self.l2 = nn.Linear(512, 512)
         self.r2 = nn.ReLU()
         self.l3 = nn.Linear(512, 10)
-        self.s1 = nn.Softmax()
     
     def forward(self, x):
         out = self.flatten(x)
@@ -51,11 +50,26 @@ class Net(nn.Module):
         out = self.l2(out)
         out = self.r2(out)
         out = self.l3(out)
-        out = self.s1(out)
         return(out)
 
-model = Net().to(device)
+model = Net()
 print(model)
 
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+
+num_steps = len(train_dataloader)
+num_epochs = 3
+
+for epoch in range(num_epochs):
+    for i, (X, y) in enumerate(train_dataloader):
+        pred = model(X)
+        loss = loss_fn(pred, y)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        print(f"Epoch : {epoch+1} Loss : {loss.item():.4f}")
+
+print("Training is done!")
