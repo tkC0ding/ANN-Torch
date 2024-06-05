@@ -32,3 +32,24 @@ device = (
 )
 
 print(f"Using {device} device")
+
+class Net(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.flatten = nn.Flatten()
+        self.net = nn.Sequential(
+            nn.Linear(784, 16),
+            nn.ReLU(),
+            nn.Linear(16, 16),
+            nn.ReLU(),
+            nn.Linear(16, 10),
+            nn.Softmax()
+        )
+    
+    def forward(self, x):
+        x = self.flatten(x)
+        probabilities = self.net(x)
+        return(probabilities)
+
+model = Net().to(device)
+print(model)
