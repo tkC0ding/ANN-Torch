@@ -98,3 +98,5 @@ with torch.no_grad():
     avg_loss = test_loss/num_batches
     avg_acc = correct/size
     print(f"Accuracy : {avg_acc} Loss : {avg_loss}")
+
+torch.save(model.state_dict(), 'SavedModel/model.pth')
