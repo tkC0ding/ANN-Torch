@@ -55,7 +55,6 @@ class DNN(nn.Module):
         out = self.r3(out)
         out = self.l4(out)
         return(out)
-    
 
 model = DNN().to(device)
 
@@ -64,39 +63,39 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
 print(model)
 
-num_epochs = 10
+print(f"Using {device} device.")
 
-print(f"Using {device} device")
-for epoch in range(num_epochs):
-    for X, y in train_loader:
+def train(model, loss_fn, optimizer, dataloader):
+    acc = 0
+    for X,y in dataloader:
         X, y = X.to(device), y.to(device)
 
         y_pred = model(X)
         loss = loss_fn(y_pred, y)
+        acc += (y_pred.argmax(1) == y).type(torch.float).sum().item()/len(y)
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-    print(f"Epoch : {epoch + 1} Loss : {loss.item()}")
-print("training is done!")
+    acc = acc/len(dataloader)
+    return((loss.item(), acc))
 
-num_batches = len(test_loader)
-size = len(test_loader.dataset)
+def test(model, loss_fn, dataloader):
+    acc = 0
+    with torch.no_grad():
+        for X,y in dataloader:
+            X, y = X.to(device), y.to(device)
 
-test_loss = 0
-correct = 0
+            pred = model(X)
+            loss = loss_fn(pred, y)
+            acc += (pred.argmax(1) == y).type(torch.float).sum().item()/len(y)
+        acc = acc/len(dataloader)
+        return((loss.item(), acc))
 
-with torch.no_grad():
-    for X,y in test_loader:
-        X, y = X.to(device), y.to(device)
-
-        pred = model(X)
-        test_loss += loss_fn(pred, y).item()
-
-        correct += (pred.argmax(1) == y).type(torch.float).sum().item()
-    
-    avg_loss = test_loss/num_batches
-    avg_acc = correct/size
-    print(f"Accuracy : {avg_acc} Loss : {avg_loss}")
+num_epochs = 10
+for epoch in range(num_epochs):
+    train_loss, train_acc = train(model, loss_fn, optimizer, train_loader)
+    val_loss, val_acc = test(model, loss_fn, test_loader)
+    print(f"Epoch:{epoch+1} loss:{train_loss} acc:{train_acc} val_loss:{val_loss} val_acc:{val_acc}")
 
 torch.save(model.state_dict(), 'SavedModel/model.pth')
